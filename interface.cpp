@@ -13,23 +13,20 @@ bool UI::isInteger(const string &s) {
 }
 void UI::printmenu(){
     cout<<"Options Available --"<<endl;
-    cout<<"1. Help"<<endl;
-    cout<<"2. Exchange stats"<<endl;
-    cout<<"3. Ask"<<endl;
-    cout<<"4. Bid"<<endl;
-    cout<<"5. Wallet"<<endl;
-    cout<<"6. Continue"<<endl;
-    cout<<"====================="<<endl;
+    cout<<"======================================================================="<<endl;
+    cout<<"1(Help) | 2(Exchange stats) | 3(Ask) | 4(Bid) | 5(Wallet) | 6(Continue)"<<endl;
+    cout<<"======================================================================="<<endl;
     cout<<"Enter your option"<<endl;
 }
 string UI::getinput(){
     string input;
-    cin>>input;
+    getline(cin, input);
     cout<<endl;
-    cout<<"xxxxxxxxxxxxxxxxxxxxx"<<endl;
+    cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
     return input;
 }
-void UI::checkvalidinput(string input){
+void UI::checkvalidinput(string input, string timesp){
+    
     if(isInteger(input)){
         int n = stoi(input);
         if(n < 1 || n > 6){
@@ -38,11 +35,21 @@ void UI::checkvalidinput(string input){
             if(n==1){
                 cout<<"No help will be provided :)"<<endl;
             }else if(n==2){//Exchange stats
-                cout<<"current market:"<<endl;
-                cout<<"Total number of orders : "<<csvReader::numberoforders<<endl;
-                cout<<"asks:bids ratio : "<<(double)csvReader::numberofasks/(csvReader::numberoforders - csvReader::numberofasks)<<endl;
+                cout<<"Total asks : "<<csvReader::timestampstats[timesp].totalasks<<endl;
+                cout<<"Total bids : "<<csvReader::timestampstats[timesp].totalbids<<endl;
+                cout<<"Product  |  Maxask  |  Minbid"<<endl;
+                for(auto it : csvReader::timestampstats[timesp].maxask){
+                    cout<<it.first<<"    "<<it.second<<"    "<<csvReader::timestampstats[timesp].minbid[it.first]<<endl;
+                }
             }else if(n==3){
-                cout<<"You cannot ask :)"<<endl;
+                cout<<"--Your ask has to be in the following format--"<<endl;
+                cout<<"product,price,amount (Ex: ETH/BTC,0.02187308,7.44564869)"<<endl;
+                string askbyuser; // The ask by the user
+                getline(cin, askbyuser);
+                vector<string> asktokens = csvReader::tokenizer(askbyuser, ',');
+                if(csvReader::validask(asktokens)){
+                    cout<<"It was a valid ask, good job"<<endl;
+                }
             }else if(n==4){
                 cout<<"You cannot bid :)"<<endl;
             }else if(n==5){
@@ -54,16 +61,23 @@ void UI::checkvalidinput(string input){
     }else{
         cout<<"Invalid Input"<<endl;
     }
-    
-    cout<<"xxxxxxxxxxxxxxxxxxxxx"<<endl;
+    cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
 }
 
 //public functions ------------------
 void UI::init(string csvfilename, char delimiter){
+    vector<OrderBookEntry> orders = loadorderbook(csvfilename, delimiter);
+    auto pt = csvReader::timestampstats.begin();
+    auto it = pt;
     while(true){
-        vector<OrderBookEntry> orders = loadorderbook(csvfilename, delimiter);
         printmenu();
+        cout<<"Timestamp : "<<it->first<<endl;
         string x = getinput();
-        checkvalidinput(x);
+        string ts = it->first;
+        checkvalidinput(x,ts);
+        it++;
+        if(it == csvReader::timestampstats.end()){
+            it = pt;
+        }
     }
 }

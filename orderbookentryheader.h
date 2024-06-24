@@ -1,5 +1,4 @@
-#ifndef ORDERBOOK
-#define ORDERBOOK
+#pragma once
 
 #include <string>
 using namespace std;
@@ -17,4 +16,3 @@ class OrderBookEntry{
         static OrderBookType stringtoOrderBookType(string s);
 };
 
-#endif
