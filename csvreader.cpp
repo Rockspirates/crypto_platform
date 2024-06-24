@@ -1,7 +1,7 @@
 #include "csvreader.h"
 // Remeber to always initalize static variables
 map<string,statsperTimestamp> csvReader::timestampstats = {};
-set<string> csvReader::availableproducts = {};
+map<string, set<string>> csvReader::availableproducts = {};
 
 // private functions ----------------------------------
 OrderBookEntry csvReader::tokenstoOrderbook(vector<string> order){
@@ -14,20 +14,18 @@ OrderBookEntry csvReader::tokenstoOrderbook(vector<string> order){
         statsperTimestamp x;
         timestampstats[timestamp] = x;
     }
-    if(availableproducts.find(product) == availableproducts.end()){
-        timestampstats[timestamp].maxask[product] = INT_MIN;
-        timestampstats[timestamp].minbid[product] = INT_MAX;
+    if(availableproducts[timestamp].find(product) == availableproducts[timestamp].end()){
+        timestampstats[timestamp].minask[product] = numeric_limits<double>::max();
+        timestampstats[timestamp].maxbid[product] = numeric_limits<double>::min();
     }
     if(type == OrderBookType::ask){
         timestampstats[timestamp].totalasks++;
-        //Currently not familiar with the data set, so these are the stats
-        timestampstats[timestamp].maxask[product] = max(timestampstats[timestamp].maxask[product], price);
+        timestampstats[timestamp].minask[product] = min(timestampstats[timestamp].minask[product], price);
     }else{
         timestampstats[timestamp].totalbids++;
-        //Currently not familiar with the data set, so these are the stats
-        timestampstats[timestamp].minbid[product] = min(timestampstats[timestamp].minbid[product], price);
+        timestampstats[timestamp].maxbid[product] = max(timestampstats[timestamp].maxbid[product], price);
     }
-    availableproducts.insert(product);
+    availableproducts[timestamp].insert(product);
     OrderBookEntry p(price,amount,timestamp,product,type);
     return p;
 }
@@ -50,7 +48,7 @@ vector<string> csvReader::tokenizer(string s, char del){
     return ans;
 }
 
-bool csvReader::validask(vector<string> asktokens){
+bool csvReader::validask(vector<string> asktokens, string timesp){
     if(asktokens.size() != 3){
         cout<<"---Invalid ask format---"<<endl;
         cout<<"----- Ask Declined------"<<endl;
@@ -65,7 +63,7 @@ bool csvReader::validask(vector<string> asktokens){
         cout<<"-------Ask Declined-------"<<endl;
         return false;
     }
-    if(availableproducts.find(asktokens[0]) == availableproducts.end()){
+    if(availableproducts[timesp].find(asktokens[0]) == availableproducts[timesp].end()){
         cout<<"---Product Unavaialable---"<<endl;
         cout<<"-------Ask Declined-------"<<endl;
         return false;
@@ -94,4 +92,20 @@ vector<OrderBookEntry> csvReader::Getorderbooks(){
         F.close();
     }
     return ans;
+}
+
+static bool comparator(OrderBookEntry a, OrderBookEntry b){
+    return a.timeStamp < b.timeStamp;
+}
+
+void csvReader::updateorderbook(vector<string> neworder, string timestamp){
+    //updating neworder to look like an order
+    neworder.insert(neworder.begin(), timestamp);
+    neworder.insert(neworder.begin()+2, "ask");
+    //pushing this order into our orderbookentry through tokenstoOrderbook
+    //so that the statspertimestamp also get updates
+    OrderBookEntry::Dynamic_orders.push_back(csvReader::tokenstoOrderbook(neworder));
+    //sorting the orderbook as per timestamp
+    sort(OrderBookEntry::Dynamic_orders.begin(), OrderBookEntry::Dynamic_orders.end(), comparator);
+    return;
 }

@@ -1,4 +1,5 @@
 #include "interface.h"
+vector<OrderBookEntry> OrderBookEntry::Dynamic_orders = {};
 
 //private functions ------------------
 vector<OrderBookEntry> UI::loadorderbook(string csvfilename, char delimiter){
@@ -37,9 +38,9 @@ void UI::checkvalidinput(string input, string timesp){
             }else if(n==2){//Exchange stats
                 cout<<"Total asks : "<<csvReader::timestampstats[timesp].totalasks<<endl;
                 cout<<"Total bids : "<<csvReader::timestampstats[timesp].totalbids<<endl;
-                cout<<"Product  |  Maxask  |  Minbid"<<endl;
-                for(auto it : csvReader::timestampstats[timesp].maxask){
-                    cout<<it.first<<"    "<<it.second<<"    "<<csvReader::timestampstats[timesp].minbid[it.first]<<endl;
+                cout<<"Product  |  Minask  |  Maxbid"<<endl;
+                for(auto it : csvReader::timestampstats[timesp].minask){
+                    cout<<it.first<<"    "<<it.second<<"    "<<csvReader::timestampstats[timesp].maxbid[it.first]<<endl;
                 }
             }else if(n==3){
                 cout<<"--Your ask has to be in the following format--"<<endl;
@@ -47,8 +48,11 @@ void UI::checkvalidinput(string input, string timesp){
                 string askbyuser; // The ask by the user
                 getline(cin, askbyuser);
                 vector<string> asktokens = csvReader::tokenizer(askbyuser, ',');
-                if(csvReader::validask(asktokens)){
-                    cout<<"It was a valid ask, good job"<<endl;
+                if(csvReader::validask(asktokens, timesp)){
+                    csvReader::updateorderbook(asktokens, timesp);
+                    cout<<endl;
+                    cout<<"---Your ask has been recorded successfully---"<<endl;
+                    cout<<endl;
                 }
             }else if(n==4){
                 cout<<"You cannot bid :)"<<endl;
@@ -66,7 +70,7 @@ void UI::checkvalidinput(string input, string timesp){
 
 //public functions ------------------
 void UI::init(string csvfilename, char delimiter){
-    vector<OrderBookEntry> orders = loadorderbook(csvfilename, delimiter);
+    OrderBookEntry::Dynamic_orders = loadorderbook(csvfilename, delimiter);
     auto pt = csvReader::timestampstats.begin();
     auto it = pt;
     while(true){

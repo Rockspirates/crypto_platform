@@ -20,3 +20,5 @@ OrderBookEntry::OrderBookEntry(double _price, double _amount, string _timeStamp,
     orderType = _orderType;
 }
 
+
+
