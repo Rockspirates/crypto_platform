@@ -1,10 +1,10 @@
 #include "interface.h"
-vector<OrderBookEntry> OrderBookEntry::Dynamic_orders = {};
 
 //private functions ------------------
-vector<OrderBookEntry> UI::loadorderbook(string csvfilename, char delimiter){
+void UI::loadorderbook(string csvfilename, char delimiter, OrderBook&Book){
     csvReader orderparser(csvfilename, delimiter);
-    return orderparser.Getorderbooks();
+    orderparser.Getorderbooks(Book);
+    return;
 }
 
 bool UI::isInteger(const string &s) {
@@ -26,8 +26,7 @@ string UI::getinput(){
     cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
     return input;
 }
-void UI::checkvalidinput(string input, string timesp){
-    
+bool UI::check_and_output(string input, string timesp,OrderBook &Book){
     if(isInteger(input)){
         int n = stoi(input);
         if(n < 1 || n > 6){
@@ -42,46 +41,66 @@ void UI::checkvalidinput(string input, string timesp){
                 for(auto it : csvReader::timestampstats[timesp].minask){
                     cout<<it.first<<"    "<<it.second<<"    "<<csvReader::timestampstats[timesp].maxbid[it.first]<<endl;
                 }
-            }else if(n==3){
-                cout<<"--Your ask has to be in the following format--"<<endl;
+            }else if(n==3 || n==4){
+                cout<<"--Your ask/bid has to be in the following format--"<<endl;
                 cout<<"product,price,amount (Ex: ETH/BTC,0.02187308,7.44564869)"<<endl;
-                string askbyuser; // The ask by the user
-                getline(cin, askbyuser);
-                vector<string> asktokens = csvReader::tokenizer(askbyuser, ',');
-                if(csvReader::validask(asktokens, timesp)){
-                    csvReader::updateorderbook(asktokens, timesp);
+                cout<<endl;
+                string order; // The ask by the user
+                getline(cin, order);
+                vector<string> ordertokens = csvReader::tokenizer(order, ',');
+                if(csvReader::validask(ordertokens, timesp)){
+                    csvReader::updateorderbook(ordertokens, timesp, n, Book);
                     cout<<endl;
-                    cout<<"---Your ask has been recorded successfully---"<<endl;
+                    std::cout << "---Your " << (n == 3 ? "ask" : "bid") << " has been recorded successfully---" << std::endl;
                     cout<<endl;
+                    Book.init_match(timesp, ordertokens[0]);
                 }
-            }else if(n==4){
-                cout<<"You cannot bid :)"<<endl;
             }else if(n==5){
-                cout<<"You cannot see your wallet :)"<<endl;
-            }else if(n==6){
-                cout<<"You cannot continue :))))"<<endl;
+                
+            }else{
+                return true;
             }
         }
     }else{
         cout<<"Invalid Input"<<endl;
     }
     cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
+    cout<<endl;
+    return false;
 }
 
 //public functions ------------------
 void UI::init(string csvfilename, char delimiter){
-    OrderBookEntry::Dynamic_orders = loadorderbook(csvfilename, delimiter);
+    OrderBook Book;
+    loadorderbook(csvfilename, delimiter, Book);
     auto pt = csvReader::timestampstats.begin();
     auto it = pt;
+    cout<<"---Initializing Wallet---"<<endl;
+    wallet Wallet;
+    vector<string> currencies = {"BTC", "USDT", "ETH", "DODGE"};
+    for(int i=0;i<4;i++){
+        cout<<currencies[i]<<" : ";
+        string p; cin>>p;
+        double amount;
+        try{
+            amount = stod(p);
+            Wallet.append_to_wallet({currencies[i], amount});
+        }catch(const exception & e){
+            cout<<"---Invalid amount---"<<endl;
+            i--;
+        }
+    }
+    cout<<"---Starting the Simulation---"<<endl;
     while(true){
         printmenu();
         cout<<"Timestamp : "<<it->first<<endl;
         string x = getinput();
         string ts = it->first;
-        checkvalidinput(x,ts);
-        it++;
-        if(it == csvReader::timestampstats.end()){
-            it = pt;
+        if(check_and_output(x,ts,Book)){
+            it++;
+            if(it == csvReader::timestampstats.end()){
+                it = pt;
+            }
         }
     }
 }

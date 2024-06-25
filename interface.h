@@ -5,7 +5,8 @@
 #include<vector>
 #include<sstream>
 #include "csvreader.h"
-#include "orderbookentryheader.h"
+#include "orderbook.h"
+#include "wallet.h"
 using namespace std;
 
 class UI{
@@ -13,8 +14,8 @@ class UI{
         bool isInteger(const std::string &s);
         void printmenu();
         string getinput();
-        void checkvalidinput(string input, string timesp);
-        vector<OrderBookEntry> loadorderbook(string csvfilename, char delimiter);
+        bool check_and_output(string input, string timesp,OrderBook&Book);
+        void loadorderbook(string csvfilename, char delimiter,OrderBook&Book);
     public:
         UI(){};  
         void init(string csvfilename, char delimiter);

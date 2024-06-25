@@ -71,9 +71,8 @@ bool csvReader::validask(vector<string> asktokens, string timesp){
     return true;
 }
 
-vector<OrderBookEntry> csvReader::Getorderbooks(){
+void csvReader::Getorderbooks(OrderBook&Book){
     ifstream F{csvfilename};// Used to open the csv file
-    vector<OrderBookEntry>ans;
     if(F.is_open()){
         string orderline;
         while(getline(F, orderline)){
@@ -87,25 +86,44 @@ vector<OrderBookEntry> csvReader::Getorderbooks(){
                 cout<<"There is some problem in the float values of the order"<<endl;
                 throw exception{};
             }
-            ans.push_back(tokenstoOrderbook(tokens));
+            OrderBookEntry q = tokenstoOrderbook(tokens);
+            if(q.orderType == OrderBookType::ask){
+                Book.ASKS.push_back(q);
+            }else{
+                Book.BIDS.push_back(q);
+            }
         }
         F.close();
     }
-    return ans;
+    return;
 }
 
-static bool comparator(OrderBookEntry a, OrderBookEntry b){
+static bool bid_comparator(OrderBookEntry &a, OrderBookEntry &b){
+    if(a.timeStamp == b.timeStamp){
+        if(a.price == b.price){
+            return a.amount > b.amount;
+        }
+        return a.price > b.price;
+    }
     return a.timeStamp < b.timeStamp;
 }
 
-void csvReader::updateorderbook(vector<string> neworder, string timestamp){
+static bool comparator(OrderBookEntry &a, OrderBookEntry &b){
+    return a.timeStamp < b.timeStamp;
+}
+
+void csvReader::updateorderbook(vector<string> neworder, string timestamp, int n, OrderBook&Book){
     //updating neworder to look like an order
     neworder.insert(neworder.begin(), timestamp);
-    neworder.insert(neworder.begin()+2, "ask");
-    //pushing this order into our orderbookentry through tokenstoOrderbook
-    //so that the statspertimestamp also get updates
-    OrderBookEntry::Dynamic_orders.push_back(csvReader::tokenstoOrderbook(neworder));
-    //sorting the orderbook as per timestamp
-    sort(OrderBookEntry::Dynamic_orders.begin(), OrderBookEntry::Dynamic_orders.end(), comparator);
+    if(n == 3){ 
+        neworder.insert(neworder.begin()+2, "ask"); 
+        Book.ASKS.push_back(csvReader::tokenstoOrderbook(neworder));
+        sort(Book.ASKS.begin(), Book.ASKS.end(), comparator);
+    }
+    else{ 
+        neworder.insert(neworder.begin()+2, "bid"); 
+        Book.BIDS.push_back(csvReader::tokenstoOrderbook(neworder));
+        sort(Book.BIDS.begin(), Book.BIDS.end(), comparator);
+    }
     return;
 }

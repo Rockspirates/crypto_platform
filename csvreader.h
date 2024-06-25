@@ -10,7 +10,7 @@
 #include<climits>
 #include<limits>
 #include<algorithm>
-#include "orderbookentryheader.h"
+#include "orderbook.h"
 
 using namespace std;
 
@@ -26,16 +26,16 @@ class csvReader : public statsperTimestamp{
     private:
         string csvfilename;
         char delimiter;
-
+        
         static OrderBookEntry tokenstoOrderbook(vector<string> order);
     public:
         static map<string,set<string>> availableproducts;   //To store available products
         static map<string,statsperTimestamp> timestampstats;// stats of each product at a timestamp
 
         static vector<string> tokenizer(string s, char del);
-        static void updateorderbook(vector<string> neworder, string timesp);
+        static void updateorderbook(vector<string> neworder, string timesp, int n, OrderBook&Book);
         static bool validask(vector<string> asktokens, string timesp);
-        vector<OrderBookEntry> Getorderbooks();
+        void Getorderbooks(OrderBook&Book);
 
         csvReader(string s, char del){ csvfilename = s; delimiter = del; }
 };
