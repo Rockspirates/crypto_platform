@@ -14,7 +14,7 @@ class UI{
         bool isInteger(const std::string &s);
         void printmenu();
         string getinput();
-        bool check_and_output(string input, string timesp,OrderBook&Book);
+        bool check_and_output(string input, string timesp,OrderBook&Book,wallet&Wallet);
         void loadorderbook(string csvfilename, char delimiter,OrderBook&Book);
     public:
         UI(){};  

@@ -48,24 +48,29 @@ vector<string> csvReader::tokenizer(string s, char del){
     return ans;
 }
 
-bool csvReader::validask(vector<string> asktokens, string timesp){
-    if(asktokens.size() != 3){
+bool csvReader::validaskbid(vector<string> ordertokens, string timesp, wallet &Wallet){
+    if(ordertokens.size() != 3){
         cout<<"---Invalid ask format---"<<endl;
-        cout<<"----- Ask Declined------"<<endl;
+        cout<<"----Ask/Bid Declined----"<<endl;
         return false;
     }
     double price, amount;
     try{
-        price = stod(asktokens[1]);
-        amount = stod(asktokens[2]);
+        price = stod(ordertokens[1]);
+        amount = stod(ordertokens[2]);
     }catch(const exception& e){
         cout<<"---Invalid price/amount---"<<endl;
-        cout<<"-------Ask Declined-------"<<endl;
+        cout<<"-----Ask/Bid Declined-----"<<endl;
         return false;
     }
-    if(availableproducts[timesp].find(asktokens[0]) == availableproducts[timesp].end()){
+    if(availableproducts[timesp].find(ordertokens[0]) == availableproducts[timesp].end()){
         cout<<"---Product Unavaialable---"<<endl;
-        cout<<"-------Ask Declined-------"<<endl;
+        cout<<"-----Ask/Bid Declined-----"<<endl;
+        return false;
+    }
+    if(!Wallet.validaskbid(ordertokens)){
+        cout<<"---You don't have enough currency to exchange---"<<endl;
+        cout<<"---------------Ask/Bid Declined-----------------"<<endl;
         return false;
     }
     return true;

@@ -26,7 +26,7 @@ string UI::getinput(){
     cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
     return input;
 }
-bool UI::check_and_output(string input, string timesp,OrderBook &Book){
+bool UI::check_and_output(string input, string timesp,OrderBook &Book,wallet &Wallet){
     if(isInteger(input)){
         int n = stoi(input);
         if(n < 1 || n > 6){
@@ -48,7 +48,7 @@ bool UI::check_and_output(string input, string timesp,OrderBook &Book){
                 string order; // The ask by the user
                 getline(cin, order);
                 vector<string> ordertokens = csvReader::tokenizer(order, ',');
-                if(csvReader::validask(ordertokens, timesp)){
+                if(csvReader::validaskbid(ordertokens, timesp,Wallet)){
                     csvReader::updateorderbook(ordertokens, timesp, n, Book);
                     cout<<endl;
                     std::cout << "---Your " << (n == 3 ? "ask" : "bid") << " has been recorded successfully---" << std::endl;
@@ -56,7 +56,7 @@ bool UI::check_and_output(string input, string timesp,OrderBook &Book){
                     Book.init_match(timesp, ordertokens[0]);
                 }
             }else if(n==5){
-                
+                Wallet.displaywallet();
             }else{
                 return true;
             }
@@ -79,9 +79,9 @@ void UI::init(string csvfilename, char delimiter){
     wallet Wallet;
     vector<string> currencies = {"BTC", "USDT", "ETH", "DODGE"};
     for(int i=0;i<4;i++){
-        cout<<currencies[i]<<" : ";
-        string p; cin>>p;
-        double amount;
+        cout<<"Enter number of "<<currencies[i]<<" : "<<endl;
+        string p; getline(cin, p);
+        double amount = 0;
         try{
             amount = stod(p);
             Wallet.append_to_wallet({currencies[i], amount});
@@ -96,7 +96,7 @@ void UI::init(string csvfilename, char delimiter){
         cout<<"Timestamp : "<<it->first<<endl;
         string x = getinput();
         string ts = it->first;
-        if(check_and_output(x,ts,Book)){
+        if(check_and_output(x,ts,Book,Wallet)){
             it++;
             if(it == csvReader::timestampstats.end()){
                 it = pt;

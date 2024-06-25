@@ -11,6 +11,7 @@
 #include<limits>
 #include<algorithm>
 #include "orderbook.h"
+#include "wallet.h"
 
 using namespace std;
 
@@ -34,7 +35,7 @@ class csvReader : public statsperTimestamp{
 
         static vector<string> tokenizer(string s, char del);
         static void updateorderbook(vector<string> neworder, string timesp, int n, OrderBook&Book);
-        static bool validask(vector<string> asktokens, string timesp);
+        static bool validaskbid(vector<string> asktokens, string timesp, wallet &Wallet);
         void Getorderbooks(OrderBook&Book);
 
         csvReader(string s, char del){ csvfilename = s; delimiter = del; }
