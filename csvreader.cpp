@@ -48,7 +48,7 @@ vector<string> csvReader::tokenizer(string s, char del){
     return ans;
 }
 
-bool csvReader::validaskbid(vector<string> ordertokens, string timesp, wallet &Wallet){
+bool csvReader::validaskbid(vector<string> ordertokens, string timesp){
     if(ordertokens.size() != 3){
         cout<<"---Invalid ask format---"<<endl;
         cout<<"----Ask/Bid Declined----"<<endl;
@@ -66,11 +66,6 @@ bool csvReader::validaskbid(vector<string> ordertokens, string timesp, wallet &W
     if(availableproducts[timesp].find(ordertokens[0]) == availableproducts[timesp].end()){
         cout<<"---Product Unavaialable---"<<endl;
         cout<<"-----Ask/Bid Declined-----"<<endl;
-        return false;
-    }
-    if(!Wallet.validaskbid(ordertokens)){
-        cout<<"---You don't have enough currency to exchange---"<<endl;
-        cout<<"---------------Ask/Bid Declined-----------------"<<endl;
         return false;
     }
     return true;
@@ -103,31 +98,25 @@ void csvReader::Getorderbooks(OrderBook&Book){
     return;
 }
 
-static bool bid_comparator(OrderBookEntry &a, OrderBookEntry &b){
-    if(a.timeStamp == b.timeStamp){
-        if(a.price == b.price){
-            return a.amount > b.amount;
-        }
-        return a.price > b.price;
-    }
-    return a.timeStamp < b.timeStamp;
-}
-
 static bool comparator(OrderBookEntry &a, OrderBookEntry &b){
     return a.timeStamp < b.timeStamp;
 }
 
-void csvReader::updateorderbook(vector<string> neworder, string timestamp, int n, OrderBook&Book){
+void csvReader::updateorderbook(vector<string> neworder, string timestamp, int n, OrderBook&Book, string username){
     //updating neworder to look like an order
     neworder.insert(neworder.begin(), timestamp);
     if(n == 3){ 
         neworder.insert(neworder.begin()+2, "ask"); 
-        Book.ASKS.push_back(csvReader::tokenstoOrderbook(neworder));
+        OrderBookEntry p = csvReader::tokenstoOrderbook(neworder);
+        p.username = username;
+        Book.ASKS.push_back(p);
         sort(Book.ASKS.begin(), Book.ASKS.end(), comparator);
     }
     else{ 
         neworder.insert(neworder.begin()+2, "bid"); 
-        Book.BIDS.push_back(csvReader::tokenstoOrderbook(neworder));
+        OrderBookEntry p = csvReader::tokenstoOrderbook(neworder);
+        p.username = username;
+        Book.BIDS.push_back(p);
         sort(Book.BIDS.begin(), Book.BIDS.end(), comparator);
     }
     return;

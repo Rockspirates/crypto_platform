@@ -6,7 +6,6 @@ void UI::loadorderbook(string csvfilename, char delimiter, OrderBook&Book){
     orderparser.Getorderbooks(Book);
     return;
 }
-
 bool UI::isInteger(const string &s) {
     istringstream iss(s);
     int num;
@@ -25,6 +24,11 @@ string UI::getinput(){
     cout<<endl;
     cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<endl;
     return input;
+}
+void UI::print_tradestats(vector<OrderBookEntry> sales){
+    for(auto &it : sales){
+        cout<<"Sales amount : "<<it.amount<<" username : "<<it.username<<endl;
+    }
 }
 bool UI::check_and_output(string input, string timesp,OrderBook &Book,wallet &Wallet){
     if(isInteger(input)){
@@ -48,13 +52,21 @@ bool UI::check_and_output(string input, string timesp,OrderBook &Book,wallet &Wa
                 string order; // The ask by the user
                 getline(cin, order);
                 vector<string> ordertokens = csvReader::tokenizer(order, ',');
-                if(csvReader::validaskbid(ordertokens, timesp,Wallet)){
-                    csvReader::updateorderbook(ordertokens, timesp, n, Book);
-                    cout<<endl;
-                    std::cout << "---Your " << (n == 3 ? "ask" : "bid") << " has been recorded successfully---" << std::endl;
-                    cout<<endl;
-                    Book.init_match(timesp, ordertokens[0]);
+                if(csvReader::validaskbid(ordertokens, timesp)){
+                    if(Wallet.validaskbid(ordertokens, n)){
+                        csvReader::updateorderbook(ordertokens, timesp, n, Book, UI::username);
+                        cout<<endl;
+                        cout << "---Your " << (n == 3 ? "ask" : "bid") << " has been recorded successfully---" << std::endl;
+                        cout<<endl;
+                        vector<OrderBookEntry> sales = Book.init_match(timesp, ordertokens[0],UI::username);
+                        Wallet.salesupdation(sales, UI::username);
+                        print_tradestats(sales);
+                    }else{
+                        cout<<"---You don't have enough currency to exchange---"<<endl;
+                        cout<<"---------------Ask/Bid Declined-----------------"<<endl;
+                    }
                 }
+                return true;
             }else if(n==5){
                 Wallet.displaywallet();
             }else{

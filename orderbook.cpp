@@ -6,17 +6,26 @@ OrderBookType OrderBookEntry::stringtoOrderBookType(string s){
         return OrderBookType::ask;
     }else if(s == "bid"){
         return OrderBookType::bid;
+    }else if(s == "bidsale"){
+        return OrderBookType::bidsale;
+    }else{
+        return OrderBookType::asksale;
     }
-    return OrderBookType::sale;
 }
 
-void OrderBook::matchingengine(vector<OrderBookEntry> &asks, vector<OrderBookEntry> &bids){
+vector<OrderBookEntry> OrderBook::matchingengine(vector<OrderBookEntry> &asks, vector<OrderBookEntry> &bids, string username){
 
     vector<OrderBookEntry> sales;
     for(auto &ask : asks){
         for(auto &bid : bids){
             if(bid.price  >= ask.price){
-                OrderBookEntry sale(ask.price,0,ask.timeStamp,ask.product,OrderBookType::sale);//inaskialized a sale
+                OrderBookEntry sale(ask.price,0,ask.timeStamp,ask.product,OrderBookType::asksale);//initialized a default sale
+                if(bid.username == username){
+                    sale.orderType = OrderBookType::bidsale;
+                    sale.username = username;
+                }else if(ask.username == username){
+                    sale.username = username;
+                }
                 if(bid.amount == ask.amount){
                     sale.amount = bid.amount;
                     sales.push_back(sale);
@@ -27,7 +36,7 @@ void OrderBook::matchingengine(vector<OrderBookEntry> &asks, vector<OrderBookEnt
                     sales.push_back(sale);
                     bid.amount -= ask.amount; ask.amount = 0;
                     break;
-                }else{
+                }else if(bid.amount < ask.amount && bid.amount > 0){
                     sale.amount = bid.amount;
                     sales.push_back(sale);
                     bid.amount = 0; ask.amount -= bid.amount; bid.price = 0;
@@ -36,17 +45,18 @@ void OrderBook::matchingengine(vector<OrderBookEntry> &asks, vector<OrderBookEnt
             }
         }
     }
-
     
+    return sales;   
 }
 
 //public functions ---------------------
-OrderBookEntry::OrderBookEntry(double _price, double _amount, string _timeStamp, string _product, OrderBookType _orderType){
+OrderBookEntry::OrderBookEntry(double _price, double _amount, string _timeStamp, string _product, OrderBookType _orderType, string _username){
     price = _price;
     amount = _amount;
     timeStamp = _timeStamp;
     product = _product;
     orderType = _orderType;
+    username = _username;
 }
 
 bool static ask_comparator(OrderBookEntry &a, OrderBookEntry &b){ // Helper function
@@ -63,7 +73,7 @@ bool static bid_comparator(OrderBookEntry &a, OrderBookEntry &b){ // Helper func
     return a.price > b.price;
 }
 
-void OrderBook::init_match(string timesp, string _product){
+vector<OrderBookEntry> OrderBook::init_match(string timesp, string _product,string username){
     vector<OrderBookEntry> asks;
     for(auto it : ASKS){
         if(it.timeStamp == timesp && it.product == _product){
@@ -80,7 +90,7 @@ void OrderBook::init_match(string timesp, string _product){
     sort(asks.begin(), asks.end(), ask_comparator);
     sort(bids.begin(), bids.end(), bid_comparator);
 
-    matchingengine(asks, bids);
+    return matchingengine(asks, bids, username);
 }
 
 

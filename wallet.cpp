@@ -15,11 +15,11 @@ void wallet::displaywallet(){
     }
 }
 
-bool wallet::validaskbid(vector<string>&tokens){
-    double price = stod(tokens[3]);
-    double amount = stod(tokens[4]);
-    pair<string,string> x = parseproduct(tokens[1]);
-    if(tokens[2] == "ask"){
+bool wallet::validaskbid(vector<string>&tokens, int n){
+    double price = stod(tokens[1]);
+    double amount = stod(tokens[2]);
+    pair<string,string> x = parseproduct(tokens[0], '/');
+    if(n == 3){
         if(wallet::currencies[x.first] >= amount){
             return true;
         }else{
@@ -36,13 +36,46 @@ bool wallet::validaskbid(vector<string>&tokens){
     return false;
 }
 
+void wallet::salesupdation(vector<OrderBookEntry>&sales,string username){
+    for(auto &it : sales){
+        if(it.username == username){
+            wallet::update(it);
+        }
+    }
+    return;
+}
+
 //private functions
-pair<string,string> wallet::parseproduct(string product){
+
+void wallet::update(OrderBookEntry&sale){
+    pair<string,string> x = parseproduct(sale.product, '/');
+    if(sale.orderType == OrderBookType::asksale){
+        double deduction = sale.amount;
+        string deductedcurrency = x.first;
+        double entry = sale.amount*sale.price;
+        string entrycurrency = x.second;
+
+        currencies[entrycurrency] += entry;
+        currencies[deductedcurrency] -= deduction;
+    }
+    if(sale.orderType == OrderBookType::bidsale){
+        double entry = sale.amount;
+        string entrycurrency = x.first;
+        double deduction = sale.amount*sale.price;
+        string deductedcurrency = x.second;
+
+        currencies[entrycurrency] += entry;
+        currencies[deductedcurrency] -= deduction;
+    }
+}
+
+pair<string,string> wallet::parseproduct(string product, char delim){
     int i=0;
     for(i=0;i<product.size();i++){
-        if(product[i]=='/'){
+        if(product[i] == delim){
             return {product.substr(0,i), product.substr(i+1)};
         }
     }
     return {"x","x"};
 }
+

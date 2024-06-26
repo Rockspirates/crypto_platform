@@ -12,8 +12,11 @@ void fastinput(){
     cin.tie(NULL);
 }
 
+string UI::username = "";
+
 int main(){
     fastinput();
+    UI::username = "akshath07";
     UI Interface;
     Interface.init("orders.csv", ',');
 }
