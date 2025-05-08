@@ -14,7 +14,6 @@ OrderBookType OrderBookEntry::stringtoOrderBookType(string s){
 }
 
 vector<OrderBookEntry> OrderBook::matchingengine(vector<OrderBookEntry> &asks, vector<OrderBookEntry> &bids, string username){
-
     vector<OrderBookEntry> sales;
     for(auto &ask : asks){
         for(auto &bid : bids){
@@ -30,16 +29,25 @@ vector<OrderBookEntry> OrderBook::matchingengine(vector<OrderBookEntry> &asks, v
                     sale.amount = bid.amount;
                     sales.push_back(sale);
                     bid.amount = 0; ask.amount = 0; bid.price = 0;
+                    cout<<"xx"<<" "<<sale.amount;
+                    if(username == sale.username){ cout<<username<<endl;}
+                    else{ cout<<endl; }
                     break;
                 }else if(bid.amount > ask.amount){
                     sale.amount = ask.amount;
                     sales.push_back(sale);
                     bid.amount -= ask.amount; ask.amount = 0;
+                    cout<<"yy"<<" "<<sale.amount;
+                    if(username == sale.username){ cout<<username<<endl;}
+                    else{ cout<<endl; }
                     break;
                 }else if(bid.amount < ask.amount && bid.amount > 0){
                     sale.amount = bid.amount;
                     sales.push_back(sale);
                     bid.amount = 0; ask.amount -= bid.amount; bid.price = 0;
+                    cout<<"zz"<<" "<<sale.amount;
+                    if(username == sale.username){ cout<<username<<endl;}
+                    else{ cout<<endl; }
                     continue;
                 }
             }

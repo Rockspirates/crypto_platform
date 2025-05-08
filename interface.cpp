@@ -37,7 +37,7 @@ bool UI::check_and_output(string input, string timesp,OrderBook &Book,wallet &Wa
             cout<<"Invalid input"<<endl;
         }else{
             if(n==1){
-                cout<<"No help will be provided :)"<<endl;
+                cout<<"How are trade calculations made :"<<endl;
             }else if(n==2){//Exchange stats
                 cout<<"Total asks : "<<csvReader::timestampstats[timesp].totalasks<<endl;
                 cout<<"Total bids : "<<csvReader::timestampstats[timesp].totalbids<<endl;
